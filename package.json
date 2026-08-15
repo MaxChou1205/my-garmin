@@ -1,0 +1,17 @@
+{
+  "name": "my-garmin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail --format pretty",
+    "smoke": "bun --env-file=.dev.vars src/smoke.ts"
+  },
+  "dependencies": {
+    "@flow-js/garmin-connect": "^1.6.17"
+  },
+  "devDependencies": {
+    "wrangler": "^4.123.0"
+  }
+}

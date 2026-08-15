@@ -1,0 +1,11 @@
+# Copy to .dev.vars for local `wrangler dev` and for `npm run smoke`. Gitignored.
+# Deployed Workers use `wrangler secret put` instead; GARMIN_CONSUMER_KEY/SECRET
+# live in wrangler.toml [vars] since they are public values.
+GARMIN_USERNAME="you@example.com"
+GARMIN_PASSWORD="your-password"
+
+TELEGRAM_BOT_TOKEN="123456:ABC-from-botfather"
+# Random string you invent; must match the secret_token given to setWebhook.
+TELEGRAM_SECRET="generate-your-own"
+# Your Telegram user id (from @userinfobot). Comma-separated for more than one.
+TELEGRAM_ALLOWED_IDS="123456789"

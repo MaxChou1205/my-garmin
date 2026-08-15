@@ -1,0 +1,19 @@
+name = "my-garmin"
+main = "src/worker.ts"
+compatibility_date = "2026-08-14"
+compatibility_flags = ["nodejs_compat"]
+
+# app-root-path's browser shim crashes workerd at import time. See the stub.
+[alias]
+"app-root-path" = "./src/app-root-path-stub.ts"
+
+[[kv_namespaces]]
+binding = "GARMIN_TOKENS"
+id = "9c18adb710944565a0f5b7dc86ba81e4"
+
+# Garmin's public OAuth consumer key, snapshotted 2026-08-14 from
+# https://thegarth.s3.amazonaws.com/oauth_consumer.json so nothing at runtime
+# depends on that deprecated third-party bucket. Public values, not secrets.
+[vars]
+GARMIN_CONSUMER_KEY = "fc3e99d2-118c-44b8-8ae3-03370dde24c0"
+GARMIN_CONSUMER_SECRET = "E08WAR897WEy2knn7aFBrvegVAf0AFdWBBF"
