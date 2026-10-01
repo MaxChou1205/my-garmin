@@ -134,7 +134,7 @@ async function login(env: GarminEnv): Promise<string> {
   return token;
 }
 
-async function accessToken(env: GarminEnv, force = false): Promise<string> {
+export async function accessToken(env: GarminEnv, force = false): Promise<string> {
   if (!force) {
     const cached = await env.GARMIN_TOKENS.get(TOKEN_KEY);
     if (cached) return cached;

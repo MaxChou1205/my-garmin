@@ -207,7 +207,26 @@ src/worker.ts              Telegram webhook：驗證、回 200、waitUntil 背�
 src/garmin.ts              登入、KV token 快取、上傳。workerd 的四個修法都在這
 src/app-root-path-stub.ts  讓 app-root-path 安全爆掉的 stub
 src/smoke.ts               冒煙測試，Bun 跑真實程式碼路徑
+src/export.ts              把全部 Garmin 活動匯出成 .fit（給 Strava 手動匯入）
 wrangler.toml              含 [alias]、KV binding、[vars]
 .dev.vars                  本機祕密（gitignored）
 .dev.vars.example          範本
 ```
+
+
+---
+
+## 9. 匯出全部活動成 .fit
+
+```bash
+npm run export             # 存到 export/
+npm run export -- D:\fit   # 指定資料夾
+```
+
+`src/export.ts` 用 `src/garmin.ts` 的 `accessToken()` 登入，分頁列出全部活動，逐筆下載原始檔。Garmin 給的是只包一個 .fit 的 zip，程式會解開後存成 `YYYY-MM-DD_HHMM_<activityId>.fit`。
+
+- **可以中斷後再跑。** 資料夾裡已經有的檔案會直接跳過。
+- **手動輸入的活動沒有原始檔**，會顯示 `❌ Garmin 下載 404`，結束時列在失敗清單裡。
+- `export/` 已加進 gitignore。
+
+匯入 Strava：到 https://www.strava.com/upload/select 上傳，**一次最多 25 個檔**，每個檔最多 25MB。重複的活動 Strava 會自己擋掉。
