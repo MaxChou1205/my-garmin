@@ -7,7 +7,7 @@
     "deploy": "wrangler deploy",
     "tail": "wrangler tail --format pretty",
     "smoke": "bun --env-file=.dev.vars src/smoke.ts",
-    "export": "bun --env-file=.dev.vars.local src/export.ts"
+    "export": "bun --env-file=.dev.vars src/export.ts"
   },
   "dependencies": {
     "@flow-js/garmin-connect": "^1.6.17"
