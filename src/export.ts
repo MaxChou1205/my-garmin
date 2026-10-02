@@ -14,8 +14,15 @@ import { accessToken, type GarminEnv, type KVLike } from "./garmin";
 const GC = "https://connectapi.garmin.com";
 const outDir = process.argv[2] ?? "export";
 
-const mem = new Map<string, string>();
-const kv: KVLike = { get: async (k) => mem.get(k) ?? null, put: async (k, v) => void mem.set(k, v) };
+// Token lives in a gitignored file so re-runs don't log in again: Garmin answers
+// repeated logins with 429 for hours. No expiry tracking — a dead token gets a 401,
+// which garmin() below turns into one forced re-login.
+const TOKEN_FILE = ".garmin-token";
+const kv: KVLike = {
+  get: async () =>
+    existsSync(TOKEN_FILE) ? (await Bun.file(TOKEN_FILE).text()).trim() || null : null,
+  put: async (_k, v) => void (await Bun.write(TOKEN_FILE, v)),
+};
 const env = { ...process.env, GARMIN_TOKENS: kv } as unknown as GarminEnv;
 if (!env.GARMIN_USERNAME || !env.GARMIN_PASSWORD) {
   throw new Error("missing creds — run with: bun --env-file=.dev.vars");
@@ -58,7 +65,9 @@ type Activity = { activityId: number; activityName: string; startTimeLocal: stri
 // Page through the whole history. 100 per page keeps each response small.
 const all: Activity[] = [];
 for (let start = 0; ; start += 100) {
-  const res = await garmin(`/activitylist-service/activities/search/activities?start=${start}&limit=100`);
+  const res = await garmin(
+    `/activitylist-service/activities/search/activities?start=${start}&limit=100`,
+  );
   if (!res.ok) throw new Error(`Garmin list ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const page = (await res.json()) as Activity[];
   all.push(...page);
@@ -67,7 +76,8 @@ for (let start = 0; ; start += 100) {
 console.log(`共 ${all.length} 筆活動 → ${outDir}/`);
 mkdirSync(outDir, { recursive: true });
 
-let saved = 0, skipped = 0;
+let saved = 0,
+  skipped = 0;
 const failed: string[] = [];
 for (const [i, a] of all.entries()) {
   // "2026-09-30 07:12:33" → "2026-09-30_0712_<id>.fit": sorts by date, unique by id.
@@ -83,10 +93,13 @@ for (const [i, a] of all.entries()) {
     // Manual entries have no original file to download.
     if (!res.ok) throw new Error(`Garmin 下載 ${res.status}`);
     const fit = unzipFirst(new Uint8Array(await res.arrayBuffer()));
-    if (new TextDecoder().decode(fit.subarray(8, 12)) !== ".FIT") throw new Error("原始檔不是 .fit");
+    if (new TextDecoder().decode(fit.subarray(8, 12)) !== ".FIT")
+      throw new Error("原始檔不是 .fit");
     await Bun.write(path, fit);
     saved++;
     console.log(label, "✅");
+    // ponytail: fixed pause, no backoff. Failed ones are retried by simply re-running.
+    await Bun.sleep(500);
   } catch (e) {
     // Keep going: one bad activity shouldn't block the rest of the history.
     failed.push(`${label} ❌ ${(e as Error).message}`);
